@@ -21,6 +21,11 @@ interface Exposure {
   first_detected_at: string;
 }
 
+interface UserProfile {
+  first_name: string | null;
+  last_name: string | null;
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -28,34 +33,29 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState('');
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileComplete, setProfileComplete] = useState(false);
 
   const fetchData = async () => {
     try {
-      const [statsData, exposuresData] = await Promise.all([
+      const [statsData, exposuresData, userData] = await Promise.all([
         api.getDashboardStats(),
         api.getExposures(),
+        api.getProfile(),
       ]);
       setStats(statsData);
       setExposures(exposuresData);
+      if (userData?.profile) {
+        setProfile(userData.profile);
+        setProfileComplete(!!userData.profile.first_name && !!userData.profile.last_name);
+      }
       setError('');
     } catch (err: any) {
       if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
         router.push('/auth/login');
         return;
       }
-      setError('Failed to load dashboard data');
-      // Fallback to demo data for development
-      setStats({
-        total_exposures: 12,
-        pending_removals: 5,
-        completed_removals: 7,
-        brokers_scanned: 45,
-      });
-      setExposures([
-        { id: '1', broker_name: 'Spokeo', status: 'found', profile_url: 'https://spokeo.com/...', first_detected_at: '2024-01-15' },
-        { id: '2', broker_name: 'WhitePages', status: 'pending_removal', profile_url: 'https://whitepages.com/...', first_detected_at: '2024-01-15' },
-        { id: '3', broker_name: 'BeenVerified', status: 'removed', profile_url: null, first_detected_at: '2024-01-10' },
-      ]);
+      setError('Failed to load dashboard data. Please try refreshing the page.');
     } finally {
       setLoading(false);
     }
@@ -66,16 +66,25 @@ export default function Dashboard() {
   }, []);
 
   const handleScan = async () => {
+    if (!profileComplete) {
+      setError('Please complete your profile with at least your name before scanning.');
+      return;
+    }
     setScanning(true);
+    setError('');
     try {
       await api.startScan();
       // Poll for results or wait
       setTimeout(() => {
         fetchData();
         setScanning(false);
-      }, 3000);
+      }, 5000);
     } catch (err: any) {
-      setError('Scan failed. Please try again.');
+      if (err.message?.includes('profile')) {
+        setError('Please complete your profile before scanning. Go to Profile Settings to add your personal information.');
+      } else {
+        setError(err.message || 'Scan failed. Please try again.');
+      }
       setScanning(false);
     }
   };
@@ -192,6 +201,27 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Profile Incomplete Banner */}
+        {!profileComplete && (
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-8">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-medium text-amber-800">Complete Your Profile to Start Scanning</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  Add your personal information (name, addresses, phone numbers) so we can search for your data on broker sites.
+                </p>
+                <Link
+                  href="/dashboard/profile"
+                  className="inline-block mt-3 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700"
+                >
+                  Complete Profile Now
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
