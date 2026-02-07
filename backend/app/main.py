@@ -62,3 +62,4 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+# Version: 2026-02-07-fix1
