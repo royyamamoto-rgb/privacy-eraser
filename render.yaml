@@ -70,6 +70,7 @@ services:
     name: privacy-eraser-redis
     plan: free
     maxmemoryPolicy: noeviction
+    ipAllowList: []  # Allow all connections from Render services
 
 databases:
   - name: privacy-eraser-db
