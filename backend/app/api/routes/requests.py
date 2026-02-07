@@ -548,10 +548,16 @@ async def create_request(
         broker = broker_result.scalar_one_or_none()
         if broker:
             broker_name = broker.name
-            opt_out_url = broker.opt_out_url
     else:
         broker_name = exposure.source_name or "Unknown Source"
-        opt_out_url = exposure.profile_url
+
+    # ALWAYS get opt-out URL from instructions first - this is the correct URL
+    opt_out_info = get_opt_out_info(broker_name, exposure.profile_url)
+    opt_out_url = opt_out_info.get("url")
+
+    # Fallback to broker's stored URL only if instructions don't have one
+    if not opt_out_url and broker and broker.opt_out_url:
+        opt_out_url = broker.opt_out_url
 
     # Try automated opt-out first with full profile info for matching
     opt_out_service = OptOutService()
