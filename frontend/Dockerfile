@@ -11,6 +11,9 @@ RUN npm install
 COPY . .
 
 # Build for production
+# Note: NEXT_PUBLIC_API_URL needs to be set as build arg for Next.js public env vars
+ARG NEXT_PUBLIC_API_URL=https://privacy-eraser-api.onrender.com
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 

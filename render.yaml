@@ -21,9 +21,13 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: STRIPE_PRICE_BASIC
+      - key: STRIPE_PRICE_BASIC_MONTHLY
         sync: false
-      - key: STRIPE_PRICE_PREMIUM
+      - key: STRIPE_PRICE_BASIC_YEARLY
+        sync: false
+      - key: STRIPE_PRICE_PREMIUM_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_PREMIUM_YEARLY
         sync: false
       - key: RESEND_API_KEY
         sync: false
