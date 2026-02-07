@@ -19,7 +19,8 @@ class AddressSchema(BaseModel):
     street: str | None = None
     city: str | None = None
     state: str | None = None
-    zip_code: str | None = None
+    zip: str | None = None  # Frontend sends 'zip'
+    zip_code: str | None = None  # Also accept 'zip_code'
     years: str | None = None  # e.g., "2018-2022"
 
 
@@ -31,8 +32,8 @@ class ProfileUpdate(BaseModel):
     nicknames: list[str] | None = None
     emails: list[str] | None = None
     phone_numbers: list[str] | None = None
-    addresses: list[AddressSchema] | None = None
-    date_of_birth: datetime | None = None
+    addresses: list[dict] | None = None  # Accept raw dict for flexibility
+    date_of_birth: str | None = None  # Accept string date from frontend
     relatives: list[str] | None = None
 
 
@@ -123,8 +124,15 @@ async def update_profile(
     update_data = profile_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         if field == "addresses" and value:
-            # Convert AddressSchema to dict
-            value = [addr.model_dump() if hasattr(addr, 'model_dump') else addr for addr in value]
+            # Ensure addresses are dicts
+            value = [addr if isinstance(addr, dict) else addr.model_dump() for addr in value]
+        elif field == "date_of_birth" and value:
+            # Parse date string to datetime
+            if isinstance(value, str) and value:
+                try:
+                    value = datetime.strptime(value, "%Y-%m-%d")
+                except ValueError:
+                    value = None
         setattr(profile, field, value)
 
     await db.commit()

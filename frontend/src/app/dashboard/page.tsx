@@ -140,7 +140,7 @@ export default function Dashboard() {
                 3
               </span>
             </Link>
-            <Link href="/dashboard/settings" className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+            <Link href="/dashboard/profile" className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium text-primary">ME</span>
             </Link>
             <button onClick={handleLogout} className="text-slate-500 hover:text-slate-700">
