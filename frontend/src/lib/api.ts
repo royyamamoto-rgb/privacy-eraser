@@ -56,7 +56,23 @@ class ApiClient {
     const response = await fetch(url, {
       ...options,
       headers,
+      redirect: 'follow',
     });
+
+    // Handle redirects for POST - the redirect changes POST to GET, so we need to refetch
+    if (response.redirected && options.method === 'POST') {
+      const redirectResponse = await fetch(response.url, {
+        ...options,
+        headers,
+      });
+
+      if (!redirectResponse.ok) {
+        const error = await redirectResponse.json().catch(() => ({ detail: 'An error occurred' }));
+        throw new Error(error.detail || 'An error occurred');
+      }
+
+      return redirectResponse.json();
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
