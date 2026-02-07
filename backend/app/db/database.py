@@ -205,7 +205,6 @@ async def update_broker_search_urls(session):
         await session.execute(
             update(DataBroker)
             .where(DataBroker.domain == domain)
-            .where(DataBroker.search_url_pattern == None)
             .values(search_url_pattern=pattern)
         )
 
