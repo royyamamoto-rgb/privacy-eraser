@@ -80,6 +80,7 @@ async def register(user_data: UserCreate, db: DbSession):
         password_hash=get_password_hash(user_data.password),
     )
     db.add(user)
+    await db.flush()  # Flush to get the user ID
 
     # Create empty profile
     profile = UserProfile(user_id=user.id)

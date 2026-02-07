@@ -40,4 +40,6 @@ async def init_db():
     from app.models import user, broker, exposure, request, alert
 
     async with engine.begin() as conn:
+        # Drop and recreate all tables (for development/initial setup)
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
