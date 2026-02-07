@@ -34,8 +34,9 @@ class BrokerResponse(BaseModel):
 
 class ExposureResponse(BaseModel):
     id: str
-    broker_id: str
+    broker_id: str | None
     broker_name: str
+    source_type: str | None
     status: str
     profile_url: str | None
     data_found: dict | None
@@ -133,27 +134,32 @@ async def get_dashboard_stats(current_user: CurrentUser, db: DbSession):
 
 @router.get("/exposures", response_model=list[ExposureResponse])
 async def list_exposures(current_user: CurrentUser, db: DbSession):
-    """List all exposures for current user."""
+    """List all exposures for current user (from all sources)."""
+    from sqlalchemy.orm import selectinload
+
+    # Get all exposures with optional broker join
     result = await db.execute(
-        select(BrokerExposure, DataBroker)
-        .join(DataBroker)
+        select(BrokerExposure)
+        .outerjoin(DataBroker)
+        .options(selectinload(BrokerExposure.broker))
         .where(BrokerExposure.user_id == current_user.id)
         .order_by(BrokerExposure.first_detected_at.desc())
     )
-    rows = result.all()
+    exposures = result.scalars().all()
 
     return [
         ExposureResponse(
             id=str(exp.id),
-            broker_id=str(exp.broker_id),
-            broker_name=broker.name,
+            broker_id=str(exp.broker_id) if exp.broker_id else None,
+            broker_name=exp.broker.name if exp.broker else exp.source_name or "Unknown Source",
+            source_type=exp.source_type,
             status=exp.status,
             profile_url=exp.profile_url,
             data_found=exp.data_found,
             first_detected_at=exp.first_detected_at,
             last_checked_at=exp.last_checked_at,
         )
-        for exp, broker in rows
+        for exp in exposures
     ]
 
 
@@ -190,31 +196,42 @@ async def start_scan(
 
 
 async def run_broker_scan(user_id: str, profile):
-    """Background task to scan all brokers."""
+    """Background task for deep scan across all sources."""
     from app.db.database import async_session
+    import uuid as uuid_lib
 
     async with async_session() as db:
-        # Get all active brokers
+        # Get all active brokers from database
         result = await db.execute(
             select(DataBroker).where(DataBroker.is_active == True)
         )
         brokers = result.scalars().all()
 
-        if not brokers:
-            return
-
-        # Run scanner
+        # Run deep scanner (scans brokers + additional sites + social + search engines)
         scanner = BrokerScanner()
         scan_results = await scanner.scan_all_brokers(brokers, profile)
 
-        # Save results as exposures
+        # Save all results as exposures
         for scan_result in scan_results:
-            if scan_result.found:
-                # Check if exposure already exists
+            if not scan_result.found:
+                continue
+
+            # Determine if this is a database broker or external source
+            is_db_broker = False
+            broker_uuid = None
+
+            try:
+                broker_uuid = uuid_lib.UUID(scan_result.broker_id)
+                is_db_broker = True
+            except (ValueError, TypeError):
+                is_db_broker = False
+
+            if is_db_broker:
+                # Check if exposure already exists for this broker
                 existing = await db.execute(
                     select(BrokerExposure)
                     .where(BrokerExposure.user_id == user_id)
-                    .where(BrokerExposure.broker_id == scan_result.broker_id)
+                    .where(BrokerExposure.broker_id == broker_uuid)
                 )
                 exposure = existing.scalar_one_or_none()
 
@@ -226,7 +243,42 @@ async def run_broker_scan(user_id: str, profile):
                 else:
                     exposure = BrokerExposure(
                         user_id=user_id,
-                        broker_id=scan_result.broker_id,
+                        broker_id=broker_uuid,
+                        source_type="broker",
+                        status="found",
+                        profile_url=scan_result.profile_url,
+                        data_found=scan_result.data_found,
+                        first_detected_at=datetime.utcnow(),
+                        last_checked_at=datetime.utcnow(),
+                    )
+                    db.add(exposure)
+            else:
+                # External source (additional site, social media, search engine)
+                source_name = scan_result.broker_id.replace("additional_", "").replace("social_", "").replace("_", " ").title()
+                if scan_result.data_found and "site_name" in scan_result.data_found:
+                    source_name = scan_result.data_found["site_name"]
+                elif scan_result.data_found and "platform" in scan_result.data_found:
+                    source_name = scan_result.data_found["platform"]
+
+                # Check if exposure already exists for this source
+                existing = await db.execute(
+                    select(BrokerExposure)
+                    .where(BrokerExposure.user_id == user_id)
+                    .where(BrokerExposure.source_name == source_name)
+                )
+                exposure = existing.scalar_one_or_none()
+
+                if exposure:
+                    exposure.status = "found"
+                    exposure.profile_url = scan_result.profile_url
+                    exposure.data_found = scan_result.data_found
+                    exposure.last_checked_at = datetime.utcnow()
+                else:
+                    exposure = BrokerExposure(
+                        user_id=user_id,
+                        broker_id=None,
+                        source_name=source_name,
+                        source_type=scan_result.source or "additional_site",
                         status="found",
                         profile_url=scan_result.profile_url,
                         data_found=scan_result.data_found,

@@ -16,7 +16,11 @@ class BrokerExposure(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
-    broker_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("data_brokers.id"), index=True)
+    broker_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("data_brokers.id"), nullable=True, index=True)
+
+    # For exposures from deep scan (sites not in broker database)
+    source_name: Mapped[str | None] = mapped_column(String(100), nullable=True)  # e.g., "PeekYou", "LinkedIn"
+    source_type: Mapped[str | None] = mapped_column(String(50), nullable=True)  # broker, additional_site, social_media, search_engine
 
     # Status: found, not_found, pending_removal, removed, re_listed
     status: Mapped[str] = mapped_column(String(50), default="found")

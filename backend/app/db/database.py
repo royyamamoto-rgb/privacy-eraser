@@ -52,6 +52,23 @@ async def init_db():
             """)
         )
 
+        # Add deep scan columns to broker_exposures
+        await conn.execute(
+            text("""
+                ALTER TABLE broker_exposures
+                ADD COLUMN IF NOT EXISTS source_name VARCHAR(100),
+                ADD COLUMN IF NOT EXISTS source_type VARCHAR(50)
+            """)
+        )
+
+        # Make broker_id nullable for external exposures
+        await conn.execute(
+            text("""
+                ALTER TABLE broker_exposures
+                ALTER COLUMN broker_id DROP NOT NULL
+            """)
+        )
+
     # Seed brokers if empty
     await seed_brokers()
 
