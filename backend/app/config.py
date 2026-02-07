@@ -38,8 +38,8 @@ class Settings(BaseSettings):
     # Frontend
     frontend_url: str = "http://localhost:3000"
 
-    # CORS
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # CORS - allow all origins in production for now
+    cors_origins: list[str] = ["http://localhost:3000", "https://privacy-eraser.onrender.com", "https://*.onrender.com"]
 
     class Config:
         env_file = ".env"
