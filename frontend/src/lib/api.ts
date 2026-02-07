@@ -42,9 +42,8 @@ class ApiClient {
     const url = `${this.baseUrl}/api/v1${endpoint}`;
     const token = options.token || this.getToken();
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
     };
 
     if (token) {
