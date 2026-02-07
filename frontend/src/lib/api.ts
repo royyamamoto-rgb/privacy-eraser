@@ -2,7 +2,10 @@
  * API client for Privacy Eraser backend
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Use production API URL, fallback to env var or localhost
+const API_URL = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+  ? 'https://privacy-eraser-api.onrender.com'
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000');
 
 interface FetchOptions extends RequestInit {
   token?: string;
