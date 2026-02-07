@@ -1,5 +1,6 @@
 """Database configuration and session management."""
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 
@@ -42,6 +43,14 @@ async def init_db():
     async with engine.begin() as conn:
         # Create tables if they don't exist (preserves data)
         await conn.run_sync(Base.metadata.create_all)
+
+        # Add search_url_pattern column if it doesn't exist (for existing installations)
+        await conn.execute(
+            text("""
+                ALTER TABLE data_brokers
+                ADD COLUMN IF NOT EXISTS search_url_pattern VARCHAR(500)
+            """)
+        )
 
     # Seed brokers if empty
     await seed_brokers()
