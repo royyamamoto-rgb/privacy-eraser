@@ -270,14 +270,23 @@ async def create_request(
     if existing_result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="A removal request is already in progress for this exposure")
 
-    # Get user profile for opt-out submission
+    # Get user profile for opt-out submission - need all identifying info
     profile_result = await db.execute(
         select(UserProfile).where(UserProfile.user_id == current_user.id)
     )
     profile = profile_result.scalar_one_or_none()
 
-    user_name = f"{profile.first_name or ''} {profile.last_name or ''}".strip() if profile else "User"
+    if not profile or not profile.first_name or not profile.last_name:
+        raise HTTPException(
+            status_code=400,
+            detail="Please complete your profile with name before requesting removal"
+        )
+
+    first_name = profile.first_name or ""
+    last_name = profile.last_name or ""
     addresses = profile.addresses if profile else None
+    phone_numbers = profile.phone_numbers if profile else None
+    date_of_birth = str(profile.date_of_birth) if profile and profile.date_of_birth else None
 
     # Get broker if exists
     broker = None
@@ -296,14 +305,17 @@ async def create_request(
         broker_name = exposure.source_name or "Unknown Source"
         opt_out_url = exposure.profile_url
 
-    # Try automated opt-out first
+    # Try automated opt-out first with full profile info for matching
     opt_out_service = OptOutService()
     auto_result = await opt_out_service.submit_opt_out(
         broker_name=broker_name,
-        user_name=user_name,
+        first_name=first_name,
+        last_name=last_name,
         user_email=current_user.email,
-        profile_url=exposure.profile_url,
+        date_of_birth=date_of_birth,
+        phone_numbers=phone_numbers,
         addresses=addresses,
+        profile_url=exposure.profile_url,
     )
 
     # Build instructions based on automation result

@@ -116,50 +116,93 @@ BROKER_OPT_OUT_CONFIG = {
 
 def generate_opt_out_email(
     broker_name: str,
-    user_name: str,
+    first_name: str,
+    last_name: str,
     user_email: str,
-    profile_url: str = None,
+    date_of_birth: str = None,
+    phone_numbers: list = None,
     addresses: list = None,
+    profile_url: str = None,
 ) -> str:
-    """Generate a professional opt-out request email."""
+    """Generate a professional opt-out request email with full identifying info."""
 
+    full_name = f"{first_name} {last_name}".strip()
+
+    # Format date of birth
+    dob_text = ""
+    if date_of_birth:
+        dob_text = f"\n- Date of Birth: {date_of_birth}"
+
+    # Format phone numbers
+    phone_text = ""
+    if phone_numbers and len(phone_numbers) > 0:
+        phone_text = "\n- Phone Number(s): " + ", ".join(phone_numbers[:3])
+
+    # Format addresses with full details including zip codes
     address_text = ""
-    if addresses:
-        address_text = "\n\nAddresses associated with my records:\n"
+    if addresses and len(addresses) > 0:
+        address_text = "\n\nAddresses associated with my records:"
         for addr in addresses[:3]:  # Include up to 3 addresses
+            street = addr.get('street', '')
             city = addr.get('city', '')
             state = addr.get('state', '')
-            if city or state:
-                address_text += f"- {city}, {state}\n"
+            zip_code = addr.get('zip', '') or addr.get('zip_code', '')
 
+            addr_line = "\n- "
+            if street:
+                addr_line += f"{street}, "
+            if city:
+                addr_line += f"{city}, "
+            if state:
+                addr_line += f"{state} "
+            if zip_code:
+                addr_line += f"{zip_code}"
+
+            if addr_line.strip() != "-":
+                address_text += addr_line.rstrip(", ")
+
+    # Profile URL if found
     profile_text = ""
     if profile_url:
-        profile_text = f"\n\nProfile URL found: {profile_url}"
+        profile_text = f"\n\nProfile URL found on your site: {profile_url}"
 
     email_body = f"""To Whom It May Concern,
 
-I am writing to request the immediate removal of my personal information from your database and website, pursuant to my rights under the California Consumer Privacy Act (CCPA) and other applicable privacy laws.
+I am writing to request the immediate removal of my personal information from your database and website, pursuant to my rights under the California Consumer Privacy Act (CCPA), General Data Protection Regulation (GDPR), and other applicable privacy laws.
 
-Personal Information to Remove:
-- Full Name: {user_name}
-- Email: {user_email}{address_text}{profile_text}
+PERSONAL INFORMATION TO REMOVE:
 
-I request that you:
+- First Name: {first_name}
+- Last Name: {last_name}
+- Email: {user_email}{dob_text}{phone_text}{address_text}{profile_text}
+
+Please search for and remove ALL records matching any combination of the above information.
+
+I REQUEST THAT YOU:
 1. Delete all personal information you have collected about me
 2. Remove any public-facing profile or listing containing my information
-3. Refrain from selling or sharing my personal information
-4. Confirm completion of this request via email
+3. Remove my information from any people-search results
+4. Refrain from selling or sharing my personal information with third parties
+5. Confirm completion of this request via email within 45 days
 
-Please process this request within 45 days as required by law. If you need to verify my identity, please respond to this email address.
+This request is made pursuant to:
+- California Consumer Privacy Act (CCPA) - Cal. Civ. Code § 1798.100
+- California "Shine the Light" Law - Cal. Civ. Code § 1798.83
+- GDPR Article 17 - Right to Erasure (if applicable)
+
+Failure to comply may result in a complaint filed with the California Attorney General's Office or relevant data protection authority.
+
+Please confirm receipt of this request and provide a timeline for completion.
 
 Thank you for your prompt attention to this matter.
 
 Sincerely,
-{user_name}
+{full_name}
 {user_email}
 
 ---
-This request was sent via Privacy Eraser (https://privacy-eraser.onrender.com)
+This opt-out request was sent via Privacy Eraser
+Reference ID: {broker_name.upper()}-{hash(user_email) % 100000:05d}
 """
     return email_body
 
@@ -188,12 +231,15 @@ class OptOutService:
     async def submit_opt_out(
         self,
         broker_name: str,
-        user_name: str,
+        first_name: str,
+        last_name: str,
         user_email: str,
-        profile_url: str = None,
+        date_of_birth: str = None,
+        phone_numbers: list = None,
         addresses: list = None,
+        profile_url: str = None,
     ) -> dict:
-        """Submit an automated opt-out request."""
+        """Submit an automated opt-out request with full profile matching info."""
 
         config = self.get_broker_config(broker_name)
 
@@ -209,16 +255,20 @@ class OptOutService:
                 broker_name=broker_name,
                 email_to=config["email"],
                 subject=config.get("subject", "Opt-Out Request"),
-                user_name=user_name,
+                first_name=first_name,
+                last_name=last_name,
                 user_email=user_email,
-                profile_url=profile_url,
+                date_of_birth=date_of_birth,
+                phone_numbers=phone_numbers,
                 addresses=addresses,
+                profile_url=profile_url,
             )
         elif config["method"] == "form":
             return await self._submit_form_opt_out(
                 broker_name=broker_name,
                 config=config,
-                user_name=user_name,
+                first_name=first_name,
+                last_name=last_name,
                 user_email=user_email,
                 profile_url=profile_url,
             )
@@ -234,12 +284,15 @@ class OptOutService:
         broker_name: str,
         email_to: str,
         subject: str,
-        user_name: str,
+        first_name: str,
+        last_name: str,
         user_email: str,
-        profile_url: str = None,
+        date_of_birth: str = None,
+        phone_numbers: list = None,
         addresses: list = None,
+        profile_url: str = None,
     ) -> dict:
-        """Send opt-out request via email using Resend."""
+        """Send opt-out request via email using Resend with full profile info."""
         try:
             from app.config import settings
             import resend
@@ -253,20 +306,27 @@ class OptOutService:
 
             resend.api_key = settings.resend_api_key
 
+            # Generate email with all identifying information
             email_body = generate_opt_out_email(
                 broker_name=broker_name,
-                user_name=user_name,
+                first_name=first_name,
+                last_name=last_name,
                 user_email=user_email,
-                profile_url=profile_url,
+                date_of_birth=date_of_birth,
+                phone_numbers=phone_numbers,
                 addresses=addresses,
+                profile_url=profile_url,
             )
+
+            # Enhance subject with user name for better matching
+            full_subject = f"{subject} - {first_name} {last_name}"
 
             # Send the opt-out email
             result = resend.Emails.send({
                 "from": f"Privacy Eraser <{settings.from_email}>",
                 "to": [email_to],
                 "reply_to": user_email,
-                "subject": subject,
+                "subject": full_subject,
                 "text": email_body,
             })
 
@@ -276,6 +336,12 @@ class OptOutService:
                 "message": f"Opt-out email sent to {broker_name} ({email_to})",
                 "email_id": result.get("id"),
                 "sent_to": email_to,
+                "includes": {
+                    "name": f"{first_name} {last_name}",
+                    "dob": bool(date_of_birth),
+                    "phones": len(phone_numbers) if phone_numbers else 0,
+                    "addresses": len(addresses) if addresses else 0,
+                }
             }
 
         except Exception as e:
@@ -290,7 +356,8 @@ class OptOutService:
         self,
         broker_name: str,
         config: dict,
-        user_name: str,
+        first_name: str,
+        last_name: str,
         user_email: str,
         profile_url: str = None,
     ) -> dict:
@@ -305,14 +372,18 @@ class OptOutService:
                     "opt_out_url": config.get("url"),
                 }
 
-            # Prepare form data
+            full_name = f"{first_name} {last_name}".strip()
+
+            # Prepare form data with all available fields
             fields = config.get("fields", {})
             form_data = {}
             for key, value in fields.items():
                 form_data[key] = value.format(
                     profile_url=profile_url or "",
                     user_email=user_email,
-                    user_name=user_name,
+                    user_name=full_name,
+                    first_name=first_name,
+                    last_name=last_name,
                 )
 
             async with httpx.AsyncClient(timeout=self.timeout, headers=self.headers) as client:
@@ -344,11 +415,14 @@ class OptOutService:
     async def submit_all_opt_outs(
         self,
         exposures: list,
-        user_name: str,
+        first_name: str,
+        last_name: str,
         user_email: str,
+        date_of_birth: str = None,
+        phone_numbers: list = None,
         addresses: list = None,
     ) -> list:
-        """Submit opt-out requests for multiple exposures."""
+        """Submit opt-out requests for multiple exposures with full profile info."""
         results = []
 
         for exposure in exposures:
@@ -357,10 +431,13 @@ class OptOutService:
 
             result = await self.submit_opt_out(
                 broker_name=broker_name,
-                user_name=user_name,
+                first_name=first_name,
+                last_name=last_name,
                 user_email=user_email,
-                profile_url=profile_url,
+                date_of_birth=date_of_birth,
+                phone_numbers=phone_numbers,
                 addresses=addresses,
+                profile_url=profile_url,
             )
             result["broker_name"] = broker_name
             result["exposure_id"] = exposure.get("id")
