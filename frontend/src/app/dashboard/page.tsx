@@ -101,13 +101,16 @@ export default function Dashboard() {
     setError('');
     try {
       await api.createRequest(exposureId, 'opt_out');
-      // Show success message briefly
-      setError('');
+      // Refresh data to show updated status
       await fetchData();
+      // Redirect to requests page to see instructions
+      router.push('/dashboard/requests');
     } catch (err: any) {
       console.error('Remove error:', err);
-      if (err.message?.includes('already exists')) {
-        setError('A removal request already exists for this exposure.');
+      if (err.message?.includes('already exists') || err.message?.includes('already in progress')) {
+        // Request exists - redirect to requests page
+        setError('');
+        router.push('/dashboard/requests');
       } else {
         setError(err.message || 'Failed to create removal request. Please try again.');
       }
@@ -121,7 +124,7 @@ export default function Dashboard() {
       case 'found':
         return <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">Exposed</span>;
       case 'pending_removal':
-        return <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-medium">Pending</span>;
+        return <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium animate-pulse">In Progress</span>;
       case 'removed':
         return <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">Removed</span>;
       default:
@@ -308,6 +311,14 @@ export default function Dashboard() {
                     >
                       {removingId === exposure.id ? 'Removing...' : 'Remove'}
                     </button>
+                  )}
+                  {exposure.status === 'pending_removal' && (
+                    <Link
+                      href="/dashboard/requests"
+                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700"
+                    >
+                      View Progress
+                    </Link>
                   )}
                   {exposure.profile_url && (
                     <a
