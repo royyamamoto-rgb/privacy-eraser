@@ -246,7 +246,10 @@ async def create_request(
     db: DbSession,
     background_tasks: BackgroundTasks,
 ):
-    """Create a removal request and start the opt-out process."""
+    """Create a removal request and automatically submit opt-out."""
+    from app.services.opt_out import OptOutService
+    from app.models.user import UserProfile
+
     # Get exposure
     exposure_result = await db.execute(
         select(BrokerExposure)
@@ -267,6 +270,15 @@ async def create_request(
     if existing_result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="A removal request is already in progress for this exposure")
 
+    # Get user profile for opt-out submission
+    profile_result = await db.execute(
+        select(UserProfile).where(UserProfile.user_id == current_user.id)
+    )
+    profile = profile_result.scalar_one_or_none()
+
+    user_name = f"{profile.first_name or ''} {profile.last_name or ''}".strip() if profile else "User"
+    addresses = profile.addresses if profile else None
+
     # Get broker if exists
     broker = None
     broker_name = "Unknown Source"
@@ -284,37 +296,72 @@ async def create_request(
         broker_name = exposure.source_name or "Unknown Source"
         opt_out_url = exposure.profile_url
 
-    # Get opt-out info
-    opt_out_info = get_opt_out_info(broker_name, exposure.profile_url)
+    # Try automated opt-out first
+    opt_out_service = OptOutService()
+    auto_result = await opt_out_service.submit_opt_out(
+        broker_name=broker_name,
+        user_name=user_name,
+        user_email=current_user.email,
+        profile_url=exposure.profile_url,
+        addresses=addresses,
+    )
 
-    # Build instructions
-    instructions = f"How to remove your data from {broker_name}:\n\n"
-    instructions += "\n".join(opt_out_info["steps"])
-    instructions += f"\n\nExpected removal time: {opt_out_info['time']}"
-    if exposure.profile_url:
-        instructions += f"\n\nYour profile URL: {exposure.profile_url}"
-    if opt_out_info.get("url"):
-        instructions += f"\n\nDirect opt-out link: {opt_out_info['url']}"
-        opt_out_url = opt_out_info["url"]
+    # Build instructions based on automation result
+    if auto_result["success"]:
+        if auto_result["method"] == "email":
+            instructions = f"✅ AUTOMATED OPT-OUT SENT!\n\n"
+            instructions += f"We automatically sent an opt-out request email to {broker_name}.\n"
+            instructions += f"Email sent to: {auto_result.get('sent_to', 'their privacy team')}\n\n"
+            instructions += "What happens next:\n"
+            instructions += "1. The broker will process your request (usually 24-72 hours)\n"
+            instructions += "2. They may send a confirmation email to verify your identity\n"
+            instructions += "3. Check your email for any confirmation requests\n"
+            instructions += "4. Your data should be removed within 7-14 days\n\n"
+            instructions += "No further action needed unless they request verification!"
+            method_used = "auto_email"
+            requires_action = False
+        else:
+            instructions = f"✅ AUTOMATED OPT-OUT SUBMITTED!\n\n"
+            instructions += f"We automatically submitted an opt-out request to {broker_name}.\n\n"
+            instructions += "What happens next:\n"
+            instructions += "1. The broker will process your request\n"
+            instructions += "2. Your data should be removed within 24-72 hours\n\n"
+            instructions += "No further action needed!"
+            method_used = "auto_form"
+            requires_action = False
+    else:
+        # Fallback to manual instructions
+        opt_out_info = get_opt_out_info(broker_name, exposure.profile_url)
+        instructions = f"Manual removal required for {broker_name}:\n\n"
+        instructions += "\n".join(opt_out_info["steps"])
+        instructions += f"\n\nExpected removal time: {opt_out_info['time']}"
+        if exposure.profile_url:
+            instructions += f"\n\nYour profile URL: {exposure.profile_url}"
+        if opt_out_info.get("url"):
+            instructions += f"\n\nDirect opt-out link: {opt_out_info['url']}"
+            opt_out_url = opt_out_info["url"]
+        method_used = "manual"
+        requires_action = True
 
     # Determine processing time
     if broker and broker.processing_days:
         processing_days = broker.processing_days
     else:
-        processing_days = 14  # Default 2 weeks
+        processing_days = 14 if requires_action else 7  # Faster for automated
 
-    # Create request - immediately mark as "submitted" with instructions
+    # Create request
     request = RemovalRequest(
         user_id=current_user.id,
         broker_id=exposure.broker_id,
         exposure_id=exposure.id,
         request_type=request_data.request_type,
-        status="submitted",  # Mark as submitted immediately
+        status="submitted",
         submitted_at=datetime.utcnow(),
         expected_completion=(datetime.utcnow() + timedelta(days=processing_days)).date(),
-        requires_user_action=True,  # User needs to follow instructions
+        requires_user_action=requires_action,
         instructions=instructions,
-        method_used="manual",
+        method_used=method_used,
+        notes=f"Auto result: {auto_result.get('message', '')}",
     )
     db.add(request)
 
