@@ -94,12 +94,25 @@ export default function Dashboard() {
     router.push('/');
   };
 
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
   const handleRemove = async (exposureId: string) => {
+    setRemovingId(exposureId);
+    setError('');
     try {
       await api.createRequest(exposureId, 'opt_out');
-      fetchData();
+      // Show success message briefly
+      setError('');
+      await fetchData();
     } catch (err: any) {
-      setError('Failed to create removal request');
+      console.error('Remove error:', err);
+      if (err.message?.includes('already exists')) {
+        setError('A removal request already exists for this exposure.');
+      } else {
+        setError(err.message || 'Failed to create removal request. Please try again.');
+      }
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -290,9 +303,10 @@ export default function Dashboard() {
                   {exposure.status === 'found' && (
                     <button
                       onClick={() => handleRemove(exposure.id)}
-                      className="text-primary text-sm font-medium hover:underline"
+                      disabled={removingId === exposure.id}
+                      className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
                     >
-                      Remove
+                      {removingId === exposure.id ? 'Removing...' : 'Remove'}
                     </button>
                   )}
                   {exposure.profile_url && (
