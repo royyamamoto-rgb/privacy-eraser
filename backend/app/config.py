@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     from_email: str = "noreply@privacyeraser.com"
 
+    # Bing Search API (for deep scanning)
+    bing_search_key: str = ""
+    bing_search_endpoint: str = "https://api.bing.microsoft.com/v7.0/search"
+
     # Frontend
     frontend_url: str = "http://localhost:3000"
 

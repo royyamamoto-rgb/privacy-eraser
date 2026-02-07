@@ -748,6 +748,112 @@ class BrokerScanner:
         matches = sum(1 for domain in data_broker_domains if domain in content_lower)
         return matches >= 1
 
+    async def deep_scan_with_api(self, profile: UserProfile) -> list[ScanResult]:
+        """
+        Deep scan using Bing Search API for more comprehensive results.
+        Falls back to regular scanning if API key not configured.
+        """
+        from app.config import settings
+
+        if not settings.bing_search_key:
+            # No API key, use regular search engine scan
+            return await self.search_engine_scan(profile)
+
+        try:
+            from app.services.deep_scan import deep_scan_profile
+
+            # Build profile dict for deep scan
+            scan_profile = {
+                "full_name": f"{profile.first_name or ''} {profile.last_name or ''}".strip(),
+                "first_name": profile.first_name or "",
+                "last_name": profile.last_name or "",
+                "email": profile.emails[0] if profile.emails else None,
+                "emails": profile.emails or [],
+                "phone": profile.phone_numbers[0] if profile.phone_numbers else None,
+                "phones": profile.phone_numbers or [],
+                "city": "",
+                "state": "",
+                "addresses": [],
+            }
+
+            # Extract city/state from addresses
+            if profile.addresses and len(profile.addresses) > 0:
+                addr = profile.addresses[0]
+                scan_profile["city"] = addr.get("city", "")
+                scan_profile["state"] = addr.get("state", "")
+                scan_profile["addresses"] = profile.addresses
+
+            # Run deep scan
+            hits = await deep_scan_profile(scan_profile, max_queries=80)
+
+            # Convert to ScanResults
+            results = []
+            for hit in hits:
+                if hit["can_remove"]:  # Only include removable results
+                    results.append(ScanResult(
+                        broker_id=f"deepscan_{hit['domain'].replace('.', '_')}",
+                        found=True,
+                        profile_url=hit["url"],
+                        data_found={
+                            "title": hit["title"],
+                            "snippet": hit["snippet"],
+                            "score": hit["score"],
+                            "reasons": hit["reasons"],
+                        },
+                        source="deep_scan",
+                        source_name=hit["domain"].replace(".com", "").replace(".net", "").title(),
+                        risk_level=hit["risk"],
+                        data_types=hit["reasons"],
+                    ))
+
+            return results
+
+        except Exception as e:
+            print(f"Deep scan error: {e}")
+            # Fallback to regular scan
+            return await self.search_engine_scan(profile)
+
+    async def scan_all_brokers_enhanced(
+        self,
+        brokers: list,
+        profile: UserProfile,
+    ) -> list[ScanResult]:
+        """
+        Enhanced comprehensive scan using both regular scraping AND Bing API.
+        """
+        all_results = []
+
+        # 1. Run regular scan
+        regular_results = await self.scan_all_brokers(brokers, profile)
+        all_results.extend(regular_results)
+
+        # 2. Run deep scan with Bing API (if available)
+        deep_results = await self.deep_scan_with_api(profile)
+
+        # Deduplicate by domain
+        seen_domains = set()
+        for r in all_results:
+            if r.profile_url:
+                from urllib.parse import urlparse
+                try:
+                    domain = urlparse(r.profile_url).netloc.lower().replace("www.", "")
+                    seen_domains.add(domain)
+                except:
+                    pass
+
+        for r in deep_results:
+            if r.profile_url:
+                from urllib.parse import urlparse
+                try:
+                    domain = urlparse(r.profile_url).netloc.lower().replace("www.", "")
+                    if domain not in seen_domains:
+                        all_results.append(r)
+                        seen_domains.add(domain)
+                except:
+                    all_results.append(r)
+
+        return all_results
+
     async def scan_all_brokers(
         self,
         brokers: list,
