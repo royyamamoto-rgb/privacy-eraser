@@ -107,22 +107,27 @@ export default function Dashboard() {
     try {
       const result = await api.createRequest(exposureId, 'opt_out');
 
-      // Show success and redirect to requests page
-      setSuccessMessage('✅ Opt-out request submitted! Redirecting to track progress...');
+      // Show success message
+      setSuccessMessage('✅ Opt-out request submitted automatically! We\'re processing your removal now.');
 
+      // Refresh data to update the exposure status to "pending_removal"
+      await fetchData();
+
+      // Redirect to requests page after a delay so user sees the status change
       setTimeout(() => {
         router.push('/dashboard/requests');
-      }, 1500);
+      }, 2000);
 
     } catch (err: any) {
       console.error('Remove error:', err);
 
-      // If request already exists, just redirect to requests page
+      // If request already exists, refresh data and show the updated status
       if (err.message?.includes('already exists') || err.message?.includes('already in progress')) {
-        setSuccessMessage('Request already in progress. Redirecting to view status...');
+        setSuccessMessage('Request already in progress. Refreshing status...');
+        await fetchData();
         setTimeout(() => {
           router.push('/dashboard/requests');
-        }, 1000);
+        }, 1500);
       } else if (err.message?.includes('profile')) {
         setError('Please complete your profile before requesting removal.');
       } else {

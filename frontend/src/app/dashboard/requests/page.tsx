@@ -139,11 +139,12 @@ export default function RequestsPage() {
           <div className="flex items-start gap-3">
             <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
             <div>
-              <h3 className="font-medium text-blue-800">How Removal Works</h3>
+              <h3 className="font-medium text-blue-800">How Automated Removal Works</h3>
               <p className="text-sm text-blue-700 mt-1">
-                Each site has different opt-out procedures. Click "View Instructions" to see step-by-step
-                guide for each site. After completing the opt-out on their website, click "Mark as Removed"
-                to update your dashboard. Most removals take 24-72 hours to process.
+                <strong>We automatically send opt-out requests on your behalf!</strong> For most data brokers,
+                we send CCPA/GDPR deletion requests directly to their privacy teams with your identifying information.
+                You'll see "✅ AUTOMATED" in the instructions when we've handled it for you.
+                Most removals complete within 7-14 days. We'll update the status when confirmed.
               </p>
             </div>
           </div>
@@ -220,6 +221,12 @@ export default function RequestsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       {getStatusBadge(request.status)}
+                      {!request.requires_user_action && request.status !== 'completed' && (
+                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          Auto-Sent
+                        </span>
+                      )}
                       {request.requires_user_action && request.status !== 'completed' && (
                         <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                           <AlertTriangle className="h-3 w-3" />
