@@ -62,4 +62,17 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
-# Version: 2026-02-07-fix1
+
+
+@app.get("/debug/optout-test")
+async def debug_optout_test():
+    """Debug endpoint to test opt-out URL matching."""
+    from app.api.routes.requests import get_opt_out_info
+
+    tests = [
+        ("PeekYou", get_opt_out_info("PeekYou").get("url")),
+        ("Spokeo Alt", get_opt_out_info("Spokeo Alt").get("url")),
+        ("Spokeo", get_opt_out_info("Spokeo").get("url")),
+        ("Google Search", get_opt_out_info("Google Search").get("url")),
+    ]
+    return {"version": "2026-02-07-fix2", "tests": tests}
