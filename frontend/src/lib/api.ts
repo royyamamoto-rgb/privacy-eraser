@@ -180,6 +180,39 @@ class ApiClient {
       method: 'POST',
     });
   }
+
+  // Billing endpoints
+  async getSubscription() {
+    return this.fetch<any>('/billing/subscription');
+  }
+
+  async createCheckout(priceId: string) {
+    return this.fetch<{ checkout_url: string }>('/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ price_id: priceId }),
+    });
+  }
+
+  async createBillingPortal() {
+    return this.fetch<{ portal_url: string }>('/billing/portal', {
+      method: 'POST',
+    });
+  }
+
+  // Password reset endpoints
+  async forgotPassword(email: string) {
+    return this.fetch<any>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(token: string, password: string) {
+    return this.fetch<any>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    });
+  }
 }
 
 export const api = new ApiClient(API_URL);

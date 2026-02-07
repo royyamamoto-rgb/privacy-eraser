@@ -1,5 +1,6 @@
 """Authentication routes."""
 
+import secrets
 from datetime import datetime, timedelta
 from typing import Annotated
 
@@ -13,6 +14,7 @@ from sqlalchemy import select
 from app.config import settings
 from app.api.deps import DbSession
 from app.models.user import User, UserProfile
+from app.services.email import send_password_reset_email, send_verification_email
 
 router = APIRouter()
 
@@ -135,3 +137,87 @@ async def login(
             created_at=user.created_at,
         ),
     )
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
+
+@router.post("/forgot-password")
+async def forgot_password(data: ForgotPasswordRequest, db: DbSession):
+    """Send password reset email."""
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+
+    # Always return success to prevent email enumeration
+    if not user:
+        return {"message": "If an account exists, a reset link has been sent"}
+
+    # Generate reset token
+    token = secrets.token_urlsafe(32)
+    user.reset_token = token
+    user.reset_token_expires_at = datetime.utcnow() + timedelta(hours=1)
+
+    await db.commit()
+
+    # Send email
+    await send_password_reset_email(user.email, token)
+
+    return {"message": "If an account exists, a reset link has been sent"}
+
+
+@router.post("/reset-password")
+async def reset_password(data: ResetPasswordRequest, db: DbSession):
+    """Reset password with token."""
+    result = await db.execute(
+        select(User).where(User.reset_token == data.token)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+
+    if user.reset_token_expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset token has expired",
+        )
+
+    # Update password
+    user.password_hash = get_password_hash(data.password)
+    user.reset_token = None
+    user.reset_token_expires_at = None
+
+    await db.commit()
+
+    return {"message": "Password reset successful"}
+
+
+@router.post("/verify-email")
+async def verify_email(token: str, db: DbSession):
+    """Verify email with token."""
+    result = await db.execute(
+        select(User).where(User.verification_token == token)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification token",
+        )
+
+    user.is_verified = True
+    user.verification_token = None
+
+    await db.commit()
+
+    return {"message": "Email verified successfully"}

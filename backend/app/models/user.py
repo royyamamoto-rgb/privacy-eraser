@@ -21,7 +21,15 @@ class User(Base):
     # Subscription
     plan: Mapped[str] = mapped_column(String(50), default="free")  # free, basic, premium
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     subscription_ends_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Password reset
+    reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reset_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Email verification
+    verification_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

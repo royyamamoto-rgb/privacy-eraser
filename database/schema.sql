@@ -13,7 +13,15 @@ CREATE TABLE users (
     -- Subscription
     plan VARCHAR(50) DEFAULT 'free',
     stripe_customer_id VARCHAR(255),
+    stripe_subscription_id VARCHAR(255),
     subscription_ends_at TIMESTAMP,
+
+    -- Password reset
+    reset_token VARCHAR(255),
+    reset_token_expires_at TIMESTAMP,
+
+    -- Email verification
+    verification_token VARCHAR(255),
 
     -- Status
     is_active BOOLEAN DEFAULT true,
