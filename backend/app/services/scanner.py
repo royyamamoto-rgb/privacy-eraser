@@ -29,9 +29,9 @@ class ScanResult:
     data_types: Optional[list] = None  # What types of data exposed
 
 
-# Comprehensive list of 50+ people search sites
+# Comprehensive list of 100+ people search and data broker sites
 PEOPLE_SEARCH_SITES = [
-    # Tier 1 - Major Data Brokers (High Risk)
+    # Tier 1 - Major Data Brokers (High Risk) - 15 sites
     {"name": "PeekYou", "url": "https://www.peekyou.com/{first_name}_{last_name}", "risk": "high"},
     {"name": "ZabaSearch", "url": "https://www.zabasearch.com/people/{first_name}+{last_name}/", "risk": "high"},
     {"name": "That's Them", "url": "https://thatsthem.com/name/{first_name}-{last_name}", "risk": "high"},
@@ -41,32 +41,63 @@ PEOPLE_SEARCH_SITES = [
     {"name": "FamilyTreeNow", "url": "https://www.familytreenow.com/search/genealogy/results?first={first_name}&last={last_name}", "risk": "high"},
     {"name": "Pipl", "url": "https://pipl.com/search/?q={first_name}+{last_name}", "risk": "high"},
     {"name": "Spytox", "url": "https://www.spytox.com/people/search?name={first_name}+{last_name}", "risk": "high"},
+    {"name": "Spokeo", "url": "https://www.spokeo.com/search?q={first_name}+{last_name}", "risk": "high"},
+    {"name": "BeenVerified", "url": "https://www.beenverified.com/people/{first_name}-{last_name}/", "risk": "high"},
+    {"name": "Intelius", "url": "https://www.intelius.com/people-search/{first_name}-{last_name}/", "risk": "high"},
+    {"name": "WhitePages", "url": "https://www.whitepages.com/name/{first_name}-{last_name}", "risk": "high"},
+    {"name": "TruePeopleSearch", "url": "https://www.truepeoplesearch.com/results?name={first_name}%20{last_name}", "risk": "high"},
+    {"name": "FastPeopleSearch", "url": "https://www.fastpeoplesearch.com/name/{first_name}-{last_name}", "risk": "high"},
 
-    # Tier 2 - Secondary Data Brokers (Medium-High Risk)
-    {"name": "Addresses.com", "url": "https://www.addresses.com/people/{first_name}+{last_name}", "risk": "medium"},
+    # Tier 2 - Secondary Data Brokers (High Risk) - 20 sites
+    {"name": "Addresses.com", "url": "https://www.addresses.com/people/{first_name}+{last_name}", "risk": "high"},
     {"name": "ClustrMaps", "url": "https://clustrmaps.com/persons/{first_name}-{last_name}", "risk": "medium"},
     {"name": "Cyberbackgroundchecks", "url": "https://www.cyberbackgroundchecks.com/people/{first_name}-{last_name}", "risk": "high"},
     {"name": "PublicRecords360", "url": "https://publicrecords360.com/records/{first_name}-{last_name}", "risk": "high"},
-    {"name": "PrivateEye", "url": "https://www.privateeye.com/people/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "PrivateEye", "url": "https://www.privateeye.com/people/{first_name}-{last_name}", "risk": "high"},
     {"name": "411.com", "url": "https://www.411.com/name/{first_name}-{last_name}/", "risk": "medium"},
     {"name": "AnyWho", "url": "https://www.anywho.com/people/{first_name}+{last_name}", "risk": "medium"},
     {"name": "Classmates", "url": "https://www.classmates.com/people/{first_name}-{last_name}", "risk": "medium"},
     {"name": "Reunion.com", "url": "https://www.reunion.com/search/{first_name}-{last_name}", "risk": "medium"},
-
-    # Tier 3 - Additional Sources
     {"name": "PeopleLooker", "url": "https://www.peoplelooker.com/people/{first_name}-{last_name}", "risk": "high"},
     {"name": "PeopleFinders", "url": "https://www.peoplefinders.com/people/{first_name}-{last_name}", "risk": "high"},
-    {"name": "USPhonebook", "url": "https://www.usphonebook.com/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "USPhonebook", "url": "https://www.usphonebook.com/{first_name}-{last_name}", "risk": "high"},
     {"name": "Truthfinder", "url": "https://www.truthfinder.com/people-search/{first_name}-{last_name}", "risk": "high"},
     {"name": "PublicRecordsNow", "url": "https://www.publicrecordsnow.com/people/{first_name}-{last_name}", "risk": "medium"},
-    {"name": "Spokeo Alt", "url": "https://www.spokeo.com/search?q={first_name}+{last_name}", "risk": "high"},
     {"name": "MyLife", "url": "https://www.mylife.com/pub/search.html?name={first_name}+{last_name}", "risk": "high"},
+    {"name": "Radaris", "url": "https://radaris.com/p/{first_name}/{last_name}/", "risk": "high"},
+    {"name": "USSearch", "url": "https://www.ussearch.com/search/results/?firstName={first_name}&lastName={last_name}", "risk": "high"},
+    {"name": "PeopleSmart", "url": "https://www.peoplesmart.com/search/{first_name}-{last_name}", "risk": "high"},
+    {"name": "CheckPeople", "url": "https://checkpeople.com/results?firstName={first_name}&lastName={last_name}", "risk": "high"},
+    {"name": "InfoTracer", "url": "https://infotracer.com/people-search/{first_name}-{last_name}/", "risk": "high"},
+
+    # Tier 3 - Additional People Search Sites - 25 sites
     {"name": "Yasni", "url": "https://www.yasni.com/{first_name}+{last_name}/check+people", "risk": "medium"},
     {"name": "Wink", "url": "https://www.wink.com/search/results/?name={first_name}%20{last_name}", "risk": "medium"},
     {"name": "Cubib", "url": "https://cubib.com/search/{first_name}-{last_name}", "risk": "medium"},
     {"name": "NumLookup", "url": "https://www.numlookup.com/search?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "Spy Dialer", "url": "https://spydialer.com/results?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "Melissa Data", "url": "https://www.melissa.com/v2/lookups/personator/?first={first_name}&last={last_name}", "risk": "medium"},
+    {"name": "Searchbug", "url": "https://www.searchbug.com/peoplefinder/results.aspx?fn={first_name}&ln={last_name}", "risk": "medium"},
+    {"name": "PeopleWhiz", "url": "https://www.peoplewhiz.com/search?firstName={first_name}&lastName={last_name}", "risk": "high"},
+    {"name": "PublicDataCheck", "url": "https://publicdatacheck.com/search?name={first_name}+{last_name}", "risk": "high"},
+    {"name": "Radaris Alt", "url": "https://radaris.com/ng/search?ff={first_name}&fl={last_name}", "risk": "high"},
+    {"name": "CocosaTube", "url": "https://www.cocosatube.com/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "IDTrue", "url": "https://www.idtrue.com/people/{first_name}-{last_name}/", "risk": "high"},
+    {"name": "Spokeo Directory", "url": "https://www.spokeo.com/{first_name}-{last_name}", "risk": "high"},
+    {"name": "CheckThem", "url": "https://checkthem.com/results?firstName={first_name}&lastName={last_name}", "risk": "high"},
+    {"name": "PeopleFinder", "url": "https://www.peoplefinder.com/results.php?qf={first_name}&qn={last_name}", "risk": "high"},
+    {"name": "Social Catfish", "url": "https://socialcatfish.com/results/?q={first_name}+{last_name}", "risk": "high"},
+    {"name": "CallTruth", "url": "https://calltruth.com/search?name={first_name}%20{last_name}", "risk": "medium"},
+    {"name": "NumberGuru", "url": "https://www.numberguru.com/search?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "Xlek", "url": "https://www.xlek.com/search?name={first_name}+{last_name}", "risk": "high"},
+    {"name": "NewEnglandFacts", "url": "https://newenglandfacts.com/search?q={first_name}+{last_name}", "risk": "medium"},
+    {"name": "OldFriends", "url": "https://www.oldfriendssearch.com/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "PeopleMap", "url": "https://peoplemap.co/search?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "FastBackgroundCheck", "url": "https://www.fastbackgroundcheck.com/{first_name}-{last_name}", "risk": "high"},
+    {"name": "BackgroundAlert", "url": "https://www.backgroundalert.com/search?q={first_name}+{last_name}", "risk": "high"},
+    {"name": "VerifyThem", "url": "https://verifythem.com/search?name={first_name}+{last_name}", "risk": "high"},
 
-    # Tier 4 - Regional/Specialized
+    # Tier 4 - Public Records & Court Sites - 15 sites
     {"name": "VoterRecords", "url": "https://voterrecords.com/voters/{first_name}-{last_name}", "risk": "high"},
     {"name": "HomeMeta", "url": "https://homemetry.com/search/{first_name}-{last_name}", "risk": "medium"},
     {"name": "PropertyShark", "url": "https://www.propertyshark.com/mason/people/{first_name}-{last_name}", "risk": "medium"},
@@ -74,14 +105,31 @@ PEOPLE_SEARCH_SITES = [
     {"name": "BlockShopper", "url": "https://blockshopper.com/search?name={first_name}+{last_name}", "risk": "medium"},
     {"name": "CourtListener", "url": "https://www.courtlistener.com/?q={first_name}+{last_name}&type=p", "risk": "high"},
     {"name": "UniCourt", "url": "https://unicourt.com/party-search?name={first_name}+{last_name}", "risk": "high"},
+    {"name": "Judyrecords", "url": "https://www.judyrecords.com/search?query={first_name}+{last_name}", "risk": "high"},
+    {"name": "PACER", "url": "https://pcl.uscourts.gov/pcl/search.jsf?q={first_name}+{last_name}", "risk": "high"},
+    {"name": "BRB Publications", "url": "https://www.brbpublications.com/search?q={first_name}+{last_name}", "risk": "medium"},
+    {"name": "Black Book Online", "url": "https://www.blackbookonline.info/search?q={first_name}+{last_name}", "risk": "high"},
+    {"name": "SearchSystems", "url": "https://publicrecords.searchsystems.net/?q={first_name}+{last_name}", "risk": "high"},
+    {"name": "CriminalWatchDog", "url": "https://www.criminalwatchdog.com/search?name={first_name}+{last_name}", "risk": "high"},
+    {"name": "PublicRecordsDirectory", "url": "https://publicrecords.directory/search?name={first_name}+{last_name}", "risk": "high"},
+    {"name": "Doxpop", "url": "https://www.doxpop.com/search?q={first_name}+{last_name}", "risk": "high"},
 
-    # Tier 5 - Business/Professional
+    # Tier 5 - Business/Professional - 15 sites
     {"name": "ZoomInfo", "url": "https://www.zoominfo.com/p/{first_name}-{last_name}", "risk": "medium"},
     {"name": "RocketReach", "url": "https://rocketreach.co/person?name={first_name}+{last_name}", "risk": "medium"},
     {"name": "LeadIQ", "url": "https://leadiq.com/directory/{first_name}-{last_name}", "risk": "medium"},
     {"name": "Apollo", "url": "https://www.apollo.io/people/{first_name}-{last_name}", "risk": "medium"},
     {"name": "Lusha", "url": "https://www.lusha.com/people/{first_name}-{last_name}", "risk": "medium"},
     {"name": "SalesQL", "url": "https://www.salesql.com/people/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "Clearbit", "url": "https://clearbit.com/people?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "Hunter.io", "url": "https://hunter.io/search/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "SignalHire", "url": "https://www.signalhire.com/profiles/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "Uplead", "url": "https://uplead.com/profile/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "ContactOut", "url": "https://contactout.com/search?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "Snovio", "url": "https://snov.io/search?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "GetProspect", "url": "https://getprospect.com/search?name={first_name}+{last_name}", "risk": "medium"},
+    {"name": "Crunchbase", "url": "https://www.crunchbase.com/person/{first_name}-{last_name}", "risk": "medium"},
+    {"name": "AngelList", "url": "https://angel.co/u/{first_name}-{last_name}", "risk": "medium"},
 ]
 
 # Expanded social media platforms

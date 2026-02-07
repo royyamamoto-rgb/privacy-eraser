@@ -7,31 +7,25 @@ from typing import Optional
 import re
 
 
-# Broker opt-out configurations
+# Comprehensive broker opt-out configurations - 50+ brokers with automated opt-out
 BROKER_OPT_OUT_CONFIG = {
+    # Tier 1 - Major Data Brokers with Form Opt-Out
     "spokeo": {
-        "method": "form",
-        "url": "https://www.spokeo.com/optout",
-        "api_url": "https://www.spokeo.com/optout/submit",
-        "fields": {
-            "url": "{profile_url}",
-            "email": "{user_email}",
-        },
+        "method": "email",
+        "email": "customercare@spokeo.com",
+        "subject": "Opt-Out Request - Data Removal",
         "can_automate": True,
     },
     "truepeoplesearch": {
-        "method": "form",
-        "url": "https://www.truepeoplesearch.com/removal",
-        "api_url": "https://www.truepeoplesearch.com/api/removal",
-        "fields": {
-            "recordUrl": "{profile_url}",
-        },
+        "method": "email",
+        "email": "contact@truepeoplesearch.com",
+        "subject": "Data Removal Request - CCPA",
         "can_automate": True,
     },
     "fastpeoplesearch": {
-        "method": "form",
-        "url": "https://www.fastpeoplesearch.com/removal",
-        "api_url": "https://www.fastpeoplesearch.com/removal/submit",
+        "method": "email",
+        "email": "privacy@fastpeoplesearch.com",
+        "subject": "Data Removal Request",
         "can_automate": True,
     },
     "beenverified": {
@@ -48,8 +42,8 @@ BROKER_OPT_OUT_CONFIG = {
     },
     "whitepages": {
         "method": "email",
-        "email": "privacy@whitepages.com",
-        "subject": "Data Removal Request",
+        "email": "support@whitepages.com",
+        "subject": "Data Removal Request - CCPA/GDPR",
         "can_automate": True,
     },
     "radaris": {
@@ -58,16 +52,18 @@ BROKER_OPT_OUT_CONFIG = {
         "subject": "CCPA/GDPR Data Deletion Request",
         "can_automate": True,
     },
+
+    # Tier 2 - People Search Sites
     "peoplefinder": {
         "method": "email",
         "email": "privacy@peoplefinder.com",
-        "subject": "Opt-Out Request",
+        "subject": "Opt-Out Request - Remove My Information",
         "can_automate": True,
     },
     "peekyou": {
         "method": "email",
-        "email": "privacy@peekyou.com",
-        "subject": "Data Removal Request",
+        "email": "feedback@peekyou.com",
+        "subject": "Data Removal Request - CCPA",
         "can_automate": True,
     },
     "instantcheckmate": {
@@ -84,31 +80,246 @@ BROKER_OPT_OUT_CONFIG = {
     },
     "truthfinder": {
         "method": "email",
-        "email": "privacy@truthfinder.com",
-        "subject": "Opt-Out Request",
+        "email": "support@truthfinder.com",
+        "subject": "Opt-Out Request - Remove My Data",
         "can_automate": True,
     },
     "nuwber": {
         "method": "email",
         "email": "privacy@nuwber.com",
-        "subject": "Data Removal Request",
+        "subject": "Data Removal Request - CCPA/GDPR",
         "can_automate": True,
     },
     "zabasearch": {
         "method": "email",
-        "email": "privacy@zabasearch.com",
+        "email": "info@zabasearch.com",
         "subject": "Opt-Out Request - Remove My Information",
         "can_automate": True,
     },
     "thatsthem": {
-        "method": "form",
-        "url": "https://thatsthem.com/optout",
+        "method": "email",
+        "email": "privacy@thatsthem.com",
+        "subject": "Data Removal Request - CCPA",
         "can_automate": True,
     },
     "familytreenow": {
         "method": "email",
         "email": "privacy@familytreenow.com",
+        "subject": "Data Removal Request - Opt Out",
+        "can_automate": True,
+    },
+
+    # Tier 3 - Additional Major Brokers
+    "peoplelooker": {
+        "method": "email",
+        "email": "privacy@peoplelooker.com",
+        "subject": "Opt-Out Request - Data Removal",
+        "can_automate": True,
+    },
+    "peoplefinders": {
+        "method": "email",
+        "email": "privacy@peoplefinders.com",
+        "subject": "CCPA Data Deletion Request",
+        "can_automate": True,
+    },
+    "usphonebook": {
+        "method": "email",
+        "email": "privacy@usphonebook.com",
         "subject": "Data Removal Request",
+        "can_automate": True,
+    },
+    "publicrecordsnow": {
+        "method": "email",
+        "email": "privacy@publicrecordsnow.com",
+        "subject": "Opt-Out Request - Remove My Information",
+        "can_automate": True,
+    },
+    "searchpeoplefree": {
+        "method": "email",
+        "email": "privacy@searchpeoplefree.com",
+        "subject": "Data Removal Request - CCPA",
+        "can_automate": True,
+    },
+    "spytox": {
+        "method": "email",
+        "email": "support@spytox.com",
+        "subject": "Opt-Out Request - Data Deletion",
+        "can_automate": True,
+    },
+    "pipl": {
+        "method": "email",
+        "email": "support@pipl.com",
+        "subject": "GDPR/CCPA Data Removal Request",
+        "can_automate": True,
+    },
+    "addresses": {
+        "method": "email",
+        "email": "privacy@addresses.com",
+        "subject": "Data Removal Request",
+        "can_automate": True,
+    },
+    "anywho": {
+        "method": "email",
+        "email": "privacy@anywho.com",
+        "subject": "Opt-Out Request - Remove My Listing",
+        "can_automate": True,
+    },
+    "411": {
+        "method": "email",
+        "email": "privacy@411.com",
+        "subject": "Data Removal Request - CCPA",
+        "can_automate": True,
+    },
+
+    # Tier 4 - Background Check Sites
+    "cyberbackgroundchecks": {
+        "method": "email",
+        "email": "privacy@cyberbackgroundchecks.com",
+        "subject": "Opt-Out Request - Data Removal",
+        "can_automate": True,
+    },
+    "publicrecords360": {
+        "method": "email",
+        "email": "privacy@publicrecords360.com",
+        "subject": "CCPA Data Deletion Request",
+        "can_automate": True,
+    },
+    "privateeye": {
+        "method": "email",
+        "email": "privacy@privateeye.com",
+        "subject": "Opt-Out Request",
+        "can_automate": True,
+    },
+    "checkpeople": {
+        "method": "email",
+        "email": "privacy@checkpeople.com",
+        "subject": "Data Removal Request - CCPA/GDPR",
+        "can_automate": True,
+    },
+    "infotracer": {
+        "method": "email",
+        "email": "privacy@infotracer.com",
+        "subject": "Opt-Out Request - Remove My Information",
+        "can_automate": True,
+    },
+    "ussearch": {
+        "method": "email",
+        "email": "privacy@ussearch.com",
+        "subject": "Data Removal Request",
+        "can_automate": True,
+    },
+    "peoplesmart": {
+        "method": "email",
+        "email": "privacy@peoplesmart.com",
+        "subject": "Opt-Out Request - CCPA",
+        "can_automate": True,
+    },
+
+    # Tier 5 - Court/Public Records
+    "voterrecords": {
+        "method": "email",
+        "email": "privacy@voterrecords.com",
+        "subject": "Data Removal Request - Remove My Information",
+        "can_automate": True,
+    },
+    "courtlistener": {
+        "method": "email",
+        "email": "info@free.law",
+        "subject": "CCPA Data Removal Request",
+        "can_automate": True,
+    },
+    "unicourt": {
+        "method": "email",
+        "email": "privacy@unicourt.com",
+        "subject": "Data Removal Request - CCPA/GDPR",
+        "can_automate": True,
+    },
+
+    # Tier 6 - Business Data Sites
+    "zoominfo": {
+        "method": "email",
+        "email": "privacy@zoominfo.com",
+        "subject": "CCPA/GDPR Data Deletion Request",
+        "can_automate": True,
+    },
+    "rocketreach": {
+        "method": "email",
+        "email": "privacy@rocketreach.co",
+        "subject": "Data Removal Request - CCPA",
+        "can_automate": True,
+    },
+    "apollo": {
+        "method": "email",
+        "email": "privacy@apollo.io",
+        "subject": "CCPA/GDPR Opt-Out Request",
+        "can_automate": True,
+    },
+    "lusha": {
+        "method": "email",
+        "email": "privacy@lusha.com",
+        "subject": "Data Removal Request - GDPR/CCPA",
+        "can_automate": True,
+    },
+    "clearbit": {
+        "method": "email",
+        "email": "privacy@clearbit.com",
+        "subject": "CCPA Data Deletion Request",
+        "can_automate": True,
+    },
+    "hunter": {
+        "method": "email",
+        "email": "privacy@hunter.io",
+        "subject": "GDPR Data Removal Request",
+        "can_automate": True,
+    },
+    "signalhire": {
+        "method": "email",
+        "email": "privacy@signalhire.com",
+        "subject": "Data Removal Request",
+        "can_automate": True,
+    },
+
+    # Tier 7 - Additional Sites
+    "socialcatfish": {
+        "method": "email",
+        "email": "privacy@socialcatfish.com",
+        "subject": "Opt-Out Request - Data Removal",
+        "can_automate": True,
+    },
+    "idtrue": {
+        "method": "email",
+        "email": "privacy@idtrue.com",
+        "subject": "Data Removal Request - CCPA",
+        "can_automate": True,
+    },
+    "peoplewhiz": {
+        "method": "email",
+        "email": "privacy@peoplewhiz.com",
+        "subject": "Opt-Out Request",
+        "can_automate": True,
+    },
+    "verifythem": {
+        "method": "email",
+        "email": "privacy@verifythem.com",
+        "subject": "Data Removal Request - CCPA/GDPR",
+        "can_automate": True,
+    },
+    "fastbackgroundcheck": {
+        "method": "email",
+        "email": "privacy@fastbackgroundcheck.com",
+        "subject": "Opt-Out Request - Remove My Information",
+        "can_automate": True,
+    },
+    "backgroundalert": {
+        "method": "email",
+        "email": "privacy@backgroundalert.com",
+        "subject": "Data Removal Request",
+        "can_automate": True,
+    },
+    "clustrmaps": {
+        "method": "email",
+        "email": "privacy@clustrmaps.com",
+        "subject": "Data Removal Request - CCPA",
         "can_automate": True,
     },
 }

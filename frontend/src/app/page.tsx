@@ -32,8 +32,8 @@ export default function Home() {
           <span className="text-primary">From the Internet</span>
         </h1>
         <p className="text-xl text-slate-600 max-w-2xl mx-auto mb-8">
-          We scan 100+ data broker sites, automatically submit removal requests,
-          and continuously monitor to keep your information private.
+          We scan 100+ data broker and people search sites, automatically submit
+          opt-out requests on your behalf, and monitor daily to keep your information private.
         </p>
         <div className="flex justify-center gap-4">
           <Link
@@ -54,15 +54,15 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto mt-16">
           <div>
             <div className="text-4xl font-bold text-primary">100+</div>
-            <div className="text-slate-600">Data Brokers</div>
+            <div className="text-slate-600">Sites Scanned</div>
           </div>
           <div>
-            <div className="text-4xl font-bold text-primary">24hr</div>
+            <div className="text-4xl font-bold text-primary">Daily</div>
             <div className="text-slate-600">Monitoring</div>
           </div>
           <div>
-            <div className="text-4xl font-bold text-primary">90%</div>
-            <div className="text-slate-600">Auto-Removal</div>
+            <div className="text-4xl font-bold text-primary">50+</div>
+            <div className="text-slate-600">Auto-Opt-Out</div>
           </div>
         </div>
       </section>
@@ -77,7 +77,7 @@ export default function Home() {
             </div>
             <h3 className="font-semibold mb-2">1. Scan</h3>
             <p className="text-slate-600 text-sm">
-              We search 100+ data broker sites to find where your information is exposed.
+              We search 100+ data broker and people search sites to find where your information is exposed.
             </p>
           </div>
           <div className="text-center">
@@ -95,7 +95,7 @@ export default function Home() {
             </div>
             <h3 className="font-semibold mb-2">3. Monitor</h3>
             <p className="text-slate-600 text-sm">
-              Continuous monitoring alerts you if your data reappears.
+              Daily monitoring alerts you if your data reappears after removal.
             </p>
           </div>
           <div className="text-center">
@@ -154,15 +154,15 @@ export default function Home() {
             <ul className="space-y-3 mb-8">
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                100+ data broker removal
+                100+ sites scanned
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                Automatic opt-out
+                50+ auto opt-out
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                Quarterly monitoring
+                Monthly monitoring
               </li>
             </ul>
             <Link
@@ -190,7 +190,7 @@ export default function Home() {
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                Continuous monitoring
+                Daily monitoring
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <CheckCircle className="h-4 w-4 text-green-500" />
@@ -209,7 +209,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="container mx-auto px-4 py-12 text-center text-slate-600 text-sm">
-        <p>&copy; 2024 Privacy Eraser. All rights reserved.</p>
+        <p>&copy; 2026 Privacy Eraser. All rights reserved.</p>
       </footer>
     </div>
   );
