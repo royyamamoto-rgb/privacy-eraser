@@ -395,10 +395,17 @@ async def list_requests(current_user: CurrentUser, db: DbSession):
             opt_out_url = req.broker.opt_out_url
         elif req.exposure and req.exposure.source_name:
             broker_name = req.exposure.source_name
-            opt_out_url = req.exposure.profile_url
+            # Get the correct opt-out URL from our instructions, NOT the profile URL
+            opt_out_info = get_opt_out_info(broker_name)
+            opt_out_url = opt_out_info.get("url")
         else:
             broker_name = "Unknown Source"
             opt_out_url = None
+
+        # If still no opt-out URL, try to get from instructions
+        if not opt_out_url and broker_name:
+            opt_out_info = get_opt_out_info(broker_name)
+            opt_out_url = opt_out_info.get("url")
 
         profile_url = req.exposure.profile_url if req.exposure else None
 
