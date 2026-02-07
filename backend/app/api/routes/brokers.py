@@ -21,6 +21,7 @@ class BrokerResponse(BaseModel):
     name: str
     domain: str
     category: str | None
+    search_url_pattern: str | None
     opt_out_method: str
     processing_days: int
     difficulty: int
@@ -77,6 +78,7 @@ async def list_brokers(db: DbSession, skip: int = 0, limit: int = 100):
             name=b.name,
             domain=b.domain,
             category=b.category,
+            search_url_pattern=b.search_url_pattern,
             opt_out_method=b.opt_out_method,
             processing_days=b.processing_days,
             difficulty=b.difficulty,
