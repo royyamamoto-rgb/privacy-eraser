@@ -129,7 +129,7 @@ class ApiClient {
   }
 
   async startScan() {
-    return this.fetch<any>('/brokers/scan', {
+    return this.fetch<any>('/brokers/scan/', {
       method: 'POST',
     });
   }
@@ -144,7 +144,7 @@ class ApiClient {
   }
 
   async createRequest(exposureId: string, requestType: string = 'opt_out') {
-    return this.fetch<any>('/requests', {
+    return this.fetch<any>('/requests/', {
       method: 'POST',
       body: JSON.stringify({ exposure_id: exposureId, request_type: requestType }),
     });
