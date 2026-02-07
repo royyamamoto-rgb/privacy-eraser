@@ -360,11 +360,20 @@ class RequestStats(BaseModel):
 
 def get_opt_out_info(broker_name: str, profile_url: str = None) -> dict:
     """Get opt-out instructions for a broker."""
-    broker_key = broker_name.lower().replace(" ", "").replace("'", "")
+    broker_key = broker_name.lower().replace(" ", "").replace("'", "").replace(".", "").replace("-", "")
 
-    # Check for known brokers
+    # Check for known brokers - try both directions for matching
     for key in OPT_OUT_INSTRUCTIONS:
-        if key in broker_key:
+        if key in broker_key or broker_key in key:
+            info = OPT_OUT_INSTRUCTIONS[key].copy()
+            if profile_url:
+                info["steps"] = [s.replace("(found during scan)", profile_url) for s in info["steps"]]
+            return info
+
+    # Also try partial matching for common variations
+    broker_words = broker_key.replace("alt", "").replace("search", "").replace("free", "")
+    for key in OPT_OUT_INSTRUCTIONS:
+        if key in broker_words or broker_words in key:
             info = OPT_OUT_INSTRUCTIONS[key].copy()
             if profile_url:
                 info["steps"] = [s.replace("(found during scan)", profile_url) for s in info["steps"]]
