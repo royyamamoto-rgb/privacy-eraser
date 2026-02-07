@@ -66,6 +66,51 @@ async def get_subscription(current_user: CurrentUser, db: DbSession):
     )
 
 
+@router.post("/sync")
+async def sync_subscription(current_user: CurrentUser, db: DbSession):
+    """Sync subscription status from Stripe (fallback if webhook fails)."""
+
+    if not current_user.stripe_customer_id:
+        return {"status": "no_customer", "plan": "free"}
+
+    try:
+        # List all subscriptions for this customer
+        subscriptions = stripe.Subscription.list(
+            customer=current_user.stripe_customer_id,
+            status="active",
+            limit=1
+        )
+
+        if subscriptions.data:
+            subscription = subscriptions.data[0]
+
+            # Determine plan from price
+            price_id = subscription.items.data[0].price.id
+            plan = "basic"
+            if price_id in [settings.stripe_price_premium_monthly, settings.stripe_price_premium_yearly]:
+                plan = "premium"
+
+            # Update user
+            current_user.plan = plan
+            current_user.stripe_subscription_id = subscription.id
+            current_user.subscription_ends_at = datetime.fromtimestamp(subscription.current_period_end)
+
+            await db.commit()
+
+            return {
+                "status": "synced",
+                "plan": plan,
+                "subscription_id": subscription.id,
+                "ends_at": current_user.subscription_ends_at.isoformat()
+            }
+        else:
+            # No active subscription found
+            return {"status": "no_subscription", "plan": current_user.plan}
+
+    except stripe.error.StripeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.post("/checkout", response_model=CheckoutResponse)
 async def create_checkout_session(
     checkout_data: CheckoutRequest,
@@ -136,23 +181,33 @@ async def create_billing_portal(current_user: CurrentUser, db: DbSession):
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,
+    db: DbSession,
     stripe_signature: str = Header(None, alias="Stripe-Signature"),
-    db: DbSession = None,
 ):
     """Handle Stripe webhook events."""
 
     payload = await request.body()
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload,
-            stripe_signature,
-            settings.stripe_webhook_secret,
-        )
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
+    # If no webhook secret configured, skip signature verification (dev mode)
+    if not settings.stripe_webhook_secret:
+        try:
+            event = stripe.Event.construct_from(
+                stripe.util.json.loads(payload),
+                stripe.api_key
+            )
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid payload: {str(e)}")
+    else:
+        try:
+            event = stripe.Webhook.construct_event(
+                payload,
+                stripe_signature,
+                settings.stripe_webhook_secret,
+            )
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid payload")
+        except stripe.error.SignatureVerificationError:
+            raise HTTPException(status_code=400, detail="Invalid signature")
 
     # Handle the event
     if event.type == "checkout.session.completed":

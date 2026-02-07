@@ -217,6 +217,12 @@ class ApiClient {
     });
   }
 
+  async syncSubscription() {
+    return this.fetch<{ status: string; plan: string }>('/billing/sync', {
+      method: 'POST',
+    });
+  }
+
   // Password reset endpoints
   async forgotPassword(email: string) {
     return this.fetch<any>('/auth/forgot-password', {
