@@ -16,7 +16,7 @@ class RemovalRequest(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
-    broker_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("data_brokers.id"), index=True)
+    broker_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("data_brokers.id"), nullable=True, index=True)
     exposure_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("broker_exposures.id"), nullable=True)
 
     # Request type: opt_out, gdpr_delete, gdpr_access, ccpa_delete, ccpa_opt_out

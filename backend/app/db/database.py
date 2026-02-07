@@ -69,6 +69,14 @@ async def init_db():
             """)
         )
 
+        # Make broker_id nullable for removal requests (for external sources)
+        await conn.execute(
+            text("""
+                ALTER TABLE removal_requests
+                ALTER COLUMN broker_id DROP NOT NULL
+            """)
+        )
+
     # Seed brokers if empty
     await seed_brokers()
 
