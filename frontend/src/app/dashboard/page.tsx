@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Shield, AlertTriangle, CheckCircle, Clock, Bell, Search, RefreshCw, LogOut } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, Clock, Bell, Search, RefreshCw, LogOut, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
@@ -33,8 +33,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileComplete, setProfileComplete] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -72,13 +74,16 @@ export default function Dashboard() {
     }
     setScanning(true);
     setError('');
+    setSuccessMessage('');
     try {
       await api.startScan();
-      // Poll for results or wait
+      setSuccessMessage('Scanning in progress... This may take a minute.');
+      // Poll for results
       setTimeout(() => {
         fetchData();
         setScanning(false);
-      }, 5000);
+        setSuccessMessage('Scan complete! Check your exposures below.');
+      }, 10000);
     } catch (err: any) {
       if (err.message?.includes('profile')) {
         setError('Please complete your profile before scanning. Go to Profile Settings to add your personal information.');
@@ -94,23 +99,32 @@ export default function Dashboard() {
     router.push('/');
   };
 
-  const [removingId, setRemovingId] = useState<string | null>(null);
-
   const handleRemove = async (exposureId: string) => {
     setRemovingId(exposureId);
     setError('');
+    setSuccessMessage('');
+
     try {
-      await api.createRequest(exposureId, 'opt_out');
-      // Refresh data to show updated status
-      await fetchData();
-      // Redirect to requests page to see instructions
-      router.push('/dashboard/requests');
+      const result = await api.createRequest(exposureId, 'opt_out');
+
+      // Show success and redirect to requests page
+      setSuccessMessage('✅ Opt-out request submitted! Redirecting to track progress...');
+
+      setTimeout(() => {
+        router.push('/dashboard/requests');
+      }, 1500);
+
     } catch (err: any) {
       console.error('Remove error:', err);
+
+      // If request already exists, just redirect to requests page
       if (err.message?.includes('already exists') || err.message?.includes('already in progress')) {
-        // Request exists - redirect to requests page
-        setError('');
-        router.push('/dashboard/requests');
+        setSuccessMessage('Request already in progress. Redirecting to view status...');
+        setTimeout(() => {
+          router.push('/dashboard/requests');
+        }, 1000);
+      } else if (err.message?.includes('profile')) {
+        setError('Please complete your profile before requesting removal.');
       } else {
         setError(err.message || 'Failed to create removal request. Please try again.');
       }
@@ -124,9 +138,9 @@ export default function Dashboard() {
       case 'found':
         return <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">Exposed</span>;
       case 'pending_removal':
-        return <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium animate-pulse">In Progress</span>;
+        return <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-medium animate-pulse">Processing</span>;
       case 'removed':
-        return <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">Removed</span>;
+        return <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">✓ Removed</span>;
       default:
         return <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded-full text-xs font-medium">{status}</span>;
     }
@@ -135,7 +149,10 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading your privacy dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -152,9 +169,6 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/alerts" className="relative">
               <Bell className="h-5 w-5 text-slate-600" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                3
-              </span>
             </Link>
             <Link href="/dashboard/profile" className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="text-sm font-medium text-primary">ME</span>
@@ -175,7 +189,7 @@ export default function Dashboard() {
                 <AlertTriangle className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats?.total_exposures}</div>
+                <div className="text-2xl font-bold">{stats?.total_exposures || 0}</div>
                 <div className="text-sm text-slate-600">Active Exposures</div>
               </div>
             </div>
@@ -183,12 +197,12 @@ export default function Dashboard() {
 
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className="bg-yellow-100 p-3 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="bg-blue-100 p-3 rounded-lg">
+                <Clock className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats?.pending_removals}</div>
-                <div className="text-sm text-slate-600">Pending Removals</div>
+                <div className="text-2xl font-bold">{stats?.pending_removals || 0}</div>
+                <div className="text-sm text-slate-600">Being Removed</div>
               </div>
             </div>
           </div>
@@ -199,7 +213,7 @@ export default function Dashboard() {
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats?.completed_removals}</div>
+                <div className="text-2xl font-bold">{stats?.completed_removals || 0}</div>
                 <div className="text-sm text-slate-600">Removed</div>
               </div>
             </div>
@@ -207,12 +221,12 @@ export default function Dashboard() {
 
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <Search className="h-6 w-6 text-blue-600" />
+              <div className="bg-purple-100 p-3 rounded-lg">
+                <Search className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats?.brokers_scanned}</div>
-                <div className="text-sm text-slate-600">Brokers Scanned</div>
+                <div className="text-2xl font-bold">{stats?.brokers_scanned || 0}</div>
+                <div className="text-sm text-slate-600">Sites Scanned</div>
               </div>
             </div>
           </div>
@@ -224,9 +238,9 @@ export default function Dashboard() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
               <div className="flex-1">
-                <h3 className="font-medium text-amber-800">Complete Your Profile to Start Scanning</h3>
+                <h3 className="font-medium text-amber-800">Complete Your Profile to Start</h3>
                 <p className="text-sm text-amber-700 mt-1">
-                  Add your personal information (name, addresses, phone numbers) so we can search for your data on broker sites.
+                  Add your personal information (name, addresses, phone numbers) so we can search for and remove your data.
                 </p>
                 <Link
                   href="/dashboard/profile"
@@ -236,6 +250,14 @@ export default function Dashboard() {
                 </Link>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg mb-8 flex items-center gap-3">
+            <CheckCircle className="h-5 w-5" />
+            {successMessage}
           </div>
         )}
 
@@ -252,26 +274,27 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-4">
             <button
               onClick={handleScan}
-              disabled={scanning}
+              disabled={scanning || !profileComplete}
               className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
             >
               {scanning ? (
                 <>
                   <RefreshCw className="h-4 w-4 animate-spin" />
-                  Scanning...
+                  Scanning 70+ Sites...
                 </>
               ) : (
                 <>
                   <Search className="h-4 w-4" />
-                  Run New Scan
+                  Run Deep Scan
                 </>
               )}
             </button>
             <Link
               href="/dashboard/requests"
-              className="border border-slate-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50"
+              className="border border-slate-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
             >
-              View All Requests
+              <Clock className="h-4 w-4" />
+              View Removal Progress
             </Link>
             <Link
               href="/dashboard/profile"
@@ -284,56 +307,75 @@ export default function Dashboard() {
 
         {/* Exposures List */}
         <div className="bg-white rounded-xl shadow-sm">
-          <div className="p-6 border-b">
+          <div className="p-6 border-b flex justify-between items-center">
             <h2 className="font-semibold">Your Exposures</h2>
+            {exposures.length > 0 && (
+              <span className="text-sm text-slate-500">{exposures.length} found</span>
+            )}
           </div>
-          <div className="divide-y">
-            {exposures.map((exposure) => (
-              <div key={exposure.id} className="p-6 flex items-center justify-between hover:bg-slate-50">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                    <Shield className="h-5 w-5 text-slate-600" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{exposure.broker_name}</div>
-                    <div className="text-sm text-slate-600">
-                      Detected: {new Date(exposure.first_detected_at).toLocaleDateString()}
+
+          {exposures.length === 0 ? (
+            <div className="p-12 text-center text-slate-500">
+              <Search className="h-12 w-12 mx-auto mb-4 opacity-30" />
+              <p className="font-medium">No exposures found yet</p>
+              <p className="text-sm mt-1">Run a scan to find where your data is exposed online</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {exposures.map((exposure) => (
+                <div key={exposure.id} className="p-6 flex items-center justify-between hover:bg-slate-50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <div className="font-medium">{exposure.broker_name}</div>
+                      <div className="text-sm text-slate-600">
+                        Found: {new Date(exposure.first_detected_at).toLocaleDateString()}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(exposure.status)}
+
+                    {/* Show Remove button only for "found" status */}
+                    {exposure.status === 'found' && (
+                      <button
+                        onClick={() => handleRemove(exposure.id)}
+                        disabled={removingId === exposure.id}
+                        className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
+                      >
+                        {removingId === exposure.id ? 'Processing...' : 'Remove'}
+                      </button>
+                    )}
+
+                    {/* Show View Progress for pending_removal */}
+                    {exposure.status === 'pending_removal' && (
+                      <Link
+                        href="/dashboard/requests"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700"
+                      >
+                        View Progress
+                      </Link>
+                    )}
+
+                    {/* View profile link */}
+                    {exposure.profile_url && (
+                      <a
+                        href={exposure.profile_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-slate-500 hover:text-slate-700 p-2"
+                        title="View on site"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  {getStatusBadge(exposure.status)}
-                  {exposure.status === 'found' && (
-                    <button
-                      onClick={() => handleRemove(exposure.id)}
-                      disabled={removingId === exposure.id}
-                      className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      {removingId === exposure.id ? 'Removing...' : 'Remove'}
-                    </button>
-                  )}
-                  {exposure.status === 'pending_removal' && (
-                    <Link
-                      href="/dashboard/requests"
-                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700"
-                    >
-                      View Progress
-                    </Link>
-                  )}
-                  {exposure.profile_url && (
-                    <a
-                      href={exposure.profile_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-600 text-sm hover:underline"
-                    >
-                      View
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
