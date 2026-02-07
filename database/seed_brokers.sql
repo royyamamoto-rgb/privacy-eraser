@@ -1,0 +1,170 @@
+-- Seed data for data brokers
+-- Priority brokers with opt-out information
+
+INSERT INTO data_brokers (name, domain, category, search_url_pattern, opt_out_url, opt_out_method, opt_out_instructions, requires_verification, processing_days, can_automate, difficulty) VALUES
+
+-- Tier 1: High Priority People Search Sites
+('Spokeo', 'spokeo.com', 'people_search',
+ 'https://www.spokeo.com/{first_name}-{last_name}/{state}/{city}',
+ 'https://www.spokeo.com/optout',
+ 'form',
+ '1. Find your listing on Spokeo\n2. Copy the profile URL\n3. Go to spokeo.com/optout\n4. Enter the URL and your email\n5. Click the confirmation link in your email',
+ true, 14, true, 2),
+
+('WhitePages', 'whitepages.com', 'people_search',
+ 'https://www.whitepages.com/name/{first_name}-{last_name}/{city}-{state}',
+ 'https://www.whitepages.com/suppression-requests',
+ 'form',
+ '1. Search for yourself on WhitePages\n2. Copy your listing URL\n3. Go to whitepages.com/suppression-requests\n4. Enter URL and verify via phone\n5. Wait for removal confirmation',
+ true, 14, false, 3),
+
+('BeenVerified', 'beenverified.com', 'people_search',
+ 'https://www.beenverified.com/people/{first_name}-{last_name}/',
+ 'https://www.beenverified.com/app/optout/search',
+ 'form',
+ '1. Go to BeenVerified opt-out page\n2. Search for your record\n3. Select your listing\n4. Enter email for verification\n5. Click confirmation link',
+ true, 14, true, 2),
+
+('Intelius', 'intelius.com', 'people_search',
+ 'https://www.intelius.com/people-search/{first_name}-{last_name}/{city}-{state}',
+ 'https://www.intelius.com/opt-out',
+ 'form',
+ '1. Search for yourself on Intelius\n2. Copy listing URL\n3. Go to opt-out page\n4. Submit URL with email\n5. Verify via email',
+ true, 14, true, 2),
+
+('TruePeopleSearch', 'truepeoplesearch.com', 'people_search',
+ 'https://www.truepeoplesearch.com/results?name={first_name}%20{last_name}&citystatezip={city}%20{state}',
+ 'https://www.truepeoplesearch.com/removal',
+ 'form',
+ '1. Find your listing on TruePeopleSearch\n2. Click "Remove This Record"\n3. Complete CAPTCHA\n4. Record will be removed within 24-48 hours',
+ false, 2, true, 1),
+
+('FastPeopleSearch', 'fastpeoplesearch.com', 'people_search',
+ 'https://www.fastpeoplesearch.com/name/{first_name}-{last_name}_{city}-{state}',
+ 'https://www.fastpeoplesearch.com/removal',
+ 'form',
+ '1. Search for yourself\n2. Click on your listing\n3. Scroll down and click "Remove Record"\n4. Complete verification',
+ false, 2, true, 1),
+
+('ThatsThem', 'thatsthem.com', 'people_search',
+ 'https://thatsthem.com/name/{first_name}-{last_name}/{city}-{state}',
+ 'https://thatsthem.com/optout',
+ 'form',
+ '1. Go to ThatsThem opt-out\n2. Enter name, city, state\n3. Select your record\n4. Enter email and submit\n5. Confirm via email',
+ true, 7, true, 2),
+
+('Radaris', 'radaris.com', 'people_search',
+ 'https://radaris.com/p/{first_name}/{last_name}/',
+ 'https://radaris.com/control/privacy',
+ 'form',
+ '1. Create account on Radaris (required)\n2. Go to Privacy Control\n3. Search for your records\n4. Request removal for each listing',
+ true, 14, false, 4),
+
+('USSearch', 'ussearch.com', 'people_search',
+ 'https://www.ussearch.com/search/people/{first_name}-{last_name}/{city}-{state}/',
+ 'https://www.ussearch.com/opt-out/submit/',
+ 'form',
+ '1. Go to USSearch opt-out\n2. Enter name and state\n3. Select your record\n4. Submit email for verification',
+ true, 14, true, 2),
+
+('PeopleFinder', 'peoplefinder.com', 'people_search',
+ 'https://www.peoplefinder.com/results.php?qf={first_name}&qn={last_name}&qcs={city}%2C+{state}',
+ 'https://www.peoplefinder.com/optout.php',
+ 'form',
+ '1. Search for your listing\n2. Copy the profile URL\n3. Go to opt-out page\n4. Enter URL and email\n5. Confirm via email',
+ true, 14, true, 2),
+
+-- Tier 2: Medium Priority
+('Instant Checkmate', 'instantcheckmate.com', 'background_check',
+ 'https://www.instantcheckmate.com/people/{first_name}-{last_name}/{city}-{state}/',
+ 'https://www.instantcheckmate.com/opt-out/',
+ 'form',
+ '1. Go to opt-out page\n2. Enter name, city, state\n3. Select matching record\n4. Enter email\n5. Confirm via email',
+ true, 30, true, 2),
+
+('PeopleSmart', 'peoplesmart.com', 'people_search',
+ 'https://www.peoplesmart.com/search/{first_name}-{last_name}/{city}-{state}',
+ 'https://www.peoplesmart.com/optout-form',
+ 'form',
+ '1. Search for yourself\n2. Copy listing URL\n3. Submit opt-out form\n4. Verify via email',
+ true, 14, true, 2),
+
+('ZabaSearch', 'zabasearch.com', 'people_search',
+ 'https://www.zabasearch.com/people/{first_name}+{last_name}/{city}+{state}/',
+ 'https://www.zabasearch.com/block_records/',
+ 'email',
+ '1. Find your listing URL\n2. Email privacy@zabasearch.com\n3. Include full name, listing URL, and request removal',
+ false, 14, false, 3),
+
+('AnyWho', 'anywho.com', 'people_search',
+ 'https://www.anywho.com/people/{first_name}+{last_name}/{city}+{state}',
+ 'https://www.anywho.com/help/privacy',
+ 'form',
+ '1. Search for your listing\n2. Go to privacy page\n3. Follow removal instructions',
+ false, 14, false, 3),
+
+('411.com', '411.com', 'people_search',
+ 'https://www.411.com/name/{first_name}-{last_name}/{city}-{state}/',
+ 'https://www.411.com/privacy',
+ 'form',
+ '1. Find your listing\n2. Click "Remove my listing"\n3. Verify via phone or email',
+ true, 7, true, 2),
+
+('Addresses.com', 'addresses.com', 'people_search',
+ 'https://www.addresses.com/people/{first_name}+{last_name}/{city}+{state}/',
+ 'https://www.addresses.com/optout.php',
+ 'form',
+ '1. Search for your record\n2. Go to opt-out page\n3. Enter information\n4. Submit request',
+ false, 14, true, 2),
+
+('PublicRecordsNow', 'publicrecordsnow.com', 'public_records',
+ NULL,
+ 'https://www.publicrecordsnow.com/static/view/optout',
+ 'form',
+ '1. Go to opt-out page\n2. Enter your information\n3. Select records to remove\n4. Submit request',
+ false, 30, false, 3),
+
+('ClustrMaps', 'clustrmaps.com', 'people_search',
+ 'https://clustrmaps.com/persons/{first_name}-{last_name}',
+ 'https://clustrmaps.com/bl/opt-out',
+ 'form',
+ '1. Find your listing\n2. Click opt-out link\n3. Enter email\n4. Confirm removal',
+ true, 14, true, 2),
+
+-- Tier 3: Data Aggregators (harder to remove)
+('Acxiom', 'acxiom.com', 'data_aggregator',
+ NULL,
+ 'https://isapps.acxiom.com/optout/optout.aspx',
+ 'form',
+ '1. Go to Acxiom opt-out\n2. Fill out all required fields\n3. Submit ID verification if requested\n4. Wait for confirmation',
+ true, 45, false, 4),
+
+('Oracle Data Cloud', 'oracle.com', 'data_aggregator',
+ NULL,
+ 'https://www.oracle.com/legal/privacy/marketing-cloud-data-cloud-privacy-policy.html#optout',
+ 'form',
+ '1. Visit Oracle Data Cloud opt-out\n2. Complete opt-out form\n3. May require multiple submissions for different Oracle products',
+ false, 60, false, 5),
+
+('Epsilon', 'epsilon.com', 'data_aggregator',
+ NULL,
+ 'https://www.epsilon.com/privacy-policy',
+ 'email',
+ '1. Email optout@epsilon.com\n2. Include full name, address, email\n3. Request removal from all databases\n4. Follow up if no response in 30 days',
+ false, 60, false, 5),
+
+('LexisNexis', 'lexisnexis.com', 'background_check',
+ NULL,
+ 'https://optout.lexisnexis.com/',
+ 'mail',
+ '1. Download opt-out form from website\n2. Fill out completely\n3. Include copy of ID\n4. Mail to LexisNexis\n5. Allow 30+ days for processing',
+ true, 45, false, 5),
+
+('Experian', 'experian.com', 'credit_bureau',
+ NULL,
+ 'https://www.experian.com/privacy/opting-out-prescreen-and-offers',
+ 'phone',
+ '1. Call 1-888-567-8688\n2. Follow automated prompts\n3. Or mail opt-out request\n4. This removes you from pre-screened credit offers',
+ true, 45, false, 4);
+
+-- Add more brokers as needed...
